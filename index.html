@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AllWebHub Share</title>
+<link rel="manifest" href="manifest.json"><meta name="theme-color" content="#5b21b6">
+<link rel="icon" href="icon.svg"><link rel="apple-touch-icon" href="icon.svg">
+<link rel="stylesheet" href="css/style.css">
+</head><body>
+<header><h1>AllWebHub Share</h1><span id="status">Not connected</span></header>
+<main>
+<section id="pair">
+  <p class="lead">Send files between phones and PCs on the same Wi-Fi or hotspot. No internet, no account.</p>
+  <div class="row"><button id="btnHost">Create connection</button><button id="btnJoin" class="alt">Join connection</button></div>
+
+  <div id="hostBox" hidden>
+    <h2>Your code</h2>
+    <p>Show this to the other device. Then paste or scan its reply below.</p>
+    <textarea id="offerOut" readonly></textarea>
+    <div class="row"><button class="alt" data-copy="offerOut">Copy code</button></div>
+    <div id="offerQR" class="qr"></div>
+    <h2>Reply from the other device</h2>
+    <textarea id="answerIn" placeholder="Paste the reply here"></textarea>
+    <div class="row"><button class="alt" data-scan="answerIn">Scan QR</button><button id="btnAccept">Connect</button></div>
+  </div>
+
+  <div id="joinBox" hidden>
+    <h2>Code from the other device</h2>
+    <textarea id="offerIn" placeholder="Paste the code here"></textarea>
+    <div class="row"><button class="alt" data-scan="offerIn">Scan QR</button><button id="btnReply">Create reply</button></div>
+    <div id="replyBox" hidden>
+      <h2>Your reply</h2>
+      <p>Give this to the first device. It connects automatically.</p>
+      <textarea id="answerOut" readonly></textarea>
+      <div class="row"><button class="alt" data-copy="answerOut">Copy reply</button></div>
+      <div id="answerQR" class="qr"></div>
+    </div>
+  </div>
+  <div id="cam" hidden><button id="stopCam" class="alt">Close camera</button></div>
+</section>
+
+<section id="xfer" hidden>
+  <h2>Send files</h2>
+  <input type="file" id="file" multiple>
+  <div class="row"><button id="btnSend">Send</button></div>
+  <label id="plabel"></label><progress id="prog" value="0" max="1"></progress>
+  <h2>Received</h2>
+  <ul id="rxList"><li class="empty">Files you receive appear here.</li></ul>
+</section>
+</main>
+<script src="js/qrcode.min.js"></script>
+<script src="js/jsQR.js"></script>
+<script src="js/app.js"></script>
+</body></html>
