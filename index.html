@@ -9,31 +9,36 @@
 <header><h1>AllWebHub Share</h1><span id="status">Not connected</span></header>
 <main>
 <section id="pair">
-  <p class="lead">Send files between phones and PCs on the same Wi-Fi or hotspot. No internet, no account.</p>
+  <p class="lead">Send files between phones and PCs on the same Wi-Fi or hotspot. No internet, no account. Pair once with two QR scans.</p>
   <div class="row"><button id="btnHost">Create connection</button><button id="btnJoin" class="alt">Join connection</button></div>
 
   <div id="hostBox" hidden>
-    <h2>Your code</h2>
-    <p>Show this to the other device. Then paste or scan its reply below.</p>
-    <textarea id="offerOut" readonly></textarea>
-    <div class="row"><button class="alt" data-copy="offerOut">Copy code</button></div>
+    <h2>Step 1: let the other device scan this</h2>
     <div id="offerQR" class="qr"></div>
-    <h2>Reply from the other device</h2>
-    <textarea id="answerIn" placeholder="Paste the reply here"></textarea>
-    <div class="row"><button class="alt" data-scan="answerIn">Scan QR</button><button id="btnAccept">Connect</button></div>
+    <h2>Step 2: scan the reply from the other device</h2>
+    <div class="row"><button id="btnScanAnswer">Scan reply</button></div>
+    <details><summary>No camera? Use a code instead</summary>
+      <textarea id="offerOut" readonly></textarea>
+      <div class="row"><button class="alt" data-copy="offerOut">Copy code</button></div>
+      <textarea id="answerIn" placeholder="Paste the reply code here"></textarea>
+      <div class="row"><button id="btnAccept" class="alt">Connect</button></div>
+    </details>
   </div>
 
   <div id="joinBox" hidden>
-    <h2>Code from the other device</h2>
-    <textarea id="offerIn" placeholder="Paste the code here"></textarea>
-    <div class="row"><button class="alt" data-scan="offerIn">Scan QR</button><button id="btnReply">Create reply</button></div>
+    <h2>Step 1: scan the QR on the first device</h2>
+    <div class="row"><button id="btnScanOffer">Scan QR</button></div>
     <div id="replyBox" hidden>
-      <h2>Your reply</h2>
-      <p>Give this to the first device. It connects automatically.</p>
+      <h2>Step 2: show this to the first device</h2>
+      <p>On the first device, tap Scan reply and point its camera here.</p>
+      <div id="answerQR" class="qr"></div>
       <textarea id="answerOut" readonly></textarea>
       <div class="row"><button class="alt" data-copy="answerOut">Copy reply</button></div>
-      <div id="answerQR" class="qr"></div>
     </div>
+    <details><summary>No camera? Paste a code instead</summary>
+      <textarea id="offerIn" placeholder="Paste the code here"></textarea>
+      <div class="row"><button id="btnReply" class="alt">Create reply</button></div>
+    </details>
   </div>
   <div id="cam" hidden><button id="stopCam" class="alt">Close camera</button></div>
 </section>
