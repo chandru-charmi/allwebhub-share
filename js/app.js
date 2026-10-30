@@ -1,7 +1,16 @@
 const $=id=>document.getElementById(id), CH=16384;
 let pc,dc,rx=null;
-const enc=d=>btoa(JSON.stringify({type:d.type,sdp:d.sdp}));
-const dec=t=>JSON.parse(atob(t.trim()));
+const pack=d=>{
+  const L=d.sdp.split(/\r?\n/),g=p=>(L.find(l=>l.startsWith(p))||'').slice(p.length);
+  const c=L.filter(l=>l.startsWith('a=candidate:')&&/ udp /i.test(l)).map(l=>l.slice(12)).filter(l=>{const a=l.split(' ')[4];return a&&!a.includes(':')});
+  return JSON.stringify([d.type[0],g('a=ice-ufrag:'),g('a=ice-pwd:'),g('a=fingerprint:sha-256 ').replace(/:/g,''),c]);
+};
+const unpack=t=>{
+  const [ty,u,p,f,c]=JSON.parse(t.trim());
+  const sdp=['v=0','o=- 1 2 IN IP4 127.0.0.1','s=-','t=0 0','a=group:BUNDLE 0','m=application 9 UDP/DTLS/SCTP webrtc-datachannel','c=IN IP4 0.0.0.0','a=ice-ufrag:'+u,'a=ice-pwd:'+p,'a=fingerprint:sha-256 '+f.match(/../g).join(':'),'a=setup:'+(ty==='o'?'actpass':'active'),'a=mid:0','a=sctp-port:5000','a=max-message-size:262144',...c.map(x=>'a=candidate:'+x),'a=end-of-candidates',''].join('\r\n');
+  return {type:ty==='o'?'offer':'answer',sdp};
+};
+const enc=pack, dec=unpack; // short code: small, easy-to-scan QR
 const status=t=>$('status').textContent=t;
 const prog=(t,v)=>{$('plabel').textContent=t;$('prog').value=v};
 
@@ -20,7 +29,7 @@ const ice=()=>new Promise(r=>{
 });
 function qr(id,text){
   const el=$(id);el.innerHTML='';
-  if(window.QRCode)new QRCode(el,{text,width:260,height:260,correctLevel:QRCode.CorrectLevel.L});
+  if(window.QRCode)new QRCode(el,{text,width:300,height:300,correctLevel:QRCode.CorrectLevel.L});
   else el.textContent='QR library not added yet. Use Copy instead.';
 }
 
@@ -52,24 +61,27 @@ function addRx(name,blob){
   li.append(a,s);l.prepend(li);
 }
 
+async function accept(){
+  try{await pc.setRemoteDescription(dec($('answerIn').value));status('Connecting...')}
+  catch(e){alert('That reply is not valid. Scan or paste it again.')}
+}
+async function reply(){
+  try{
+    mk();await pc.setRemoteDescription(dec($('offerIn').value));
+    await pc.setLocalDescription(await pc.createAnswer());await ice();
+    const t=enc(pc.localDescription);$('answerOut').value=t;qr('answerQR',t);$('replyBox').hidden=false;status('Waiting for the first device...');
+  }catch(e){alert('That code is not valid. Scan or paste it again.')}
+}
 $('btnHost').onclick=async()=>{
   $('hostBox').hidden=false;$('joinBox').hidden=true;
   mk();chan(pc.createDataChannel('files'));
   await pc.setLocalDescription(await pc.createOffer());await ice();
   const t=enc(pc.localDescription);$('offerOut').value=t;qr('offerQR',t);
 };
-$('btnAccept').onclick=async()=>{
-  try{await pc.setRemoteDescription(dec($('answerIn').value));status('Connecting...')}
-  catch(e){alert('That reply is not valid. Copy or scan it again.')}
-};
-$('btnJoin').onclick=()=>{$('joinBox').hidden=false;$('hostBox').hidden=true};
-$('btnReply').onclick=async()=>{
-  try{
-    mk();await pc.setRemoteDescription(dec($('offerIn').value));
-    await pc.setLocalDescription(await pc.createAnswer());await ice();
-    const t=enc(pc.localDescription);$('answerOut').value=t;qr('answerQR',t);$('replyBox').hidden=false;
-  }catch(e){alert('That code is not valid. Copy or scan it again.')}
-};
+$('btnJoin').onclick=()=>{$('joinBox').hidden=false;$('hostBox').hidden=true;scan('offerIn',reply)};
+$('btnScanOffer').onclick=()=>scan('offerIn',reply);
+$('btnScanAnswer').onclick=()=>scan('answerIn',accept);
+$('btnAccept').onclick=accept;$('btnReply').onclick=reply;
 $('btnSend').onclick=async()=>{
   if(!dc||dc.readyState!=='open')return alert('Not connected yet.');
   for(const f of $('file').files)await send(f);
@@ -80,9 +92,8 @@ document.querySelectorAll('[data-copy]').forEach(b=>b.onclick=async()=>{
   try{await navigator.clipboard.writeText(t.value)}catch(e){document.execCommand('copy')}
   b.textContent='Copied';setTimeout(()=>b.textContent=b.textContent==='Copied'?'Copy again':b.textContent,1500);
 });
-document.querySelectorAll('[data-scan]').forEach(b=>b.onclick=()=>scan(b.dataset.scan));
 
-async function scan(target){
+async function scan(target,cb){
   const box=$('cam'),v=document.createElement('video');v.setAttribute('playsinline','');
   let s;
   try{s=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}})}
@@ -101,7 +112,7 @@ async function scan(target){
       if(det){const r=await det.detect(c);if(r[0])txt=r[0].rawValue}
       else{const d=x.getImageData(0,0,c.width,c.height),r=jsQR(d.data,d.width,d.height);if(r)txt=r.data}
     }
-    if(txt){$(target).value=txt;stop()}else requestAnimationFrame(tick);
+    if(txt){$(target).value=txt;stop();cb&&cb()}else requestAnimationFrame(tick);
   };
   tick();
 }
